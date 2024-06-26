@@ -1,97 +1,131 @@
-# News-Recommendation
-This project aims at defining user preferences and analyzing multiple news articles to provide personalized news recommendations to individual users. 
-Personalized News Recommendation System - TomRecommenderSystem
-If you have any questions about the project (introduction, operation, post-improvement, requirements, etc.), please feel free to raise them in the issue, and I will check them at any time and reply actively! Thank you!
+# 个性化新闻推荐系统--TomRecommenderSystem
 
-Chinese Document | English Document
+**若有任何有关项目的问题（导入、运行、后期改进、需求等等），欢迎首先在issue里提出，我会随时查看并积极回复！谢谢大家！**
 
-illustrate
-The recommendation algorithms used in this recommendation system include Collaborative Filtering, Content-based Recommendation, and Hot News Recommendation:
+中文文档 | [English Document](https://github.com/bluemapleman/NewsRecommendSystem/tree/master/docs/English)
 
-The implementation of collaborative filtering relies on the library provided by Mahout;
-Content-based similarity recommendation is independently improved on the original algorithm based on related papers.
-As the name suggests, hot news recommendations are based on news that has been viewed by the most users recently.
-For more information about the recommendation algorithm, please refer to the document [Introduction to the Recommendation System.pdf]
+## 说明
 
-The main libraries used (Libs):
+本推荐系统使用的推荐算法包括协同过滤（Collaborative Filtering）、基于内容相似度的推荐（Content-based Recommendation）与热点新闻推荐（Hot News Recommendation）：
 
-Ansj: The content-based recommendation part is used for word segmentation, and the TFIDF algorithm is included in it.
-Quartz: Recommend the settings for the system to run at a regular interval.
-Mahout: Uses built-in collaborative filtering algorithms.
-Jfinal: Use the built-in ActiveRecord and Db tools to map the entity classes of the database tables in the recommender system to simplify database operations.
-This recommendation system needs to be used based on the [News Module], and the definition of the [News Module] here is: ** The application of regular news gathering and news display and push to users through the public platform. **Of course, this is a practical application, if you are just doing your own research or experiments, you can only use the test data.
+- 协同过滤的实现依托于Mahout的提供库；
+- 基于内容的相似度推荐在原始算法上基于相关论文做了自主的改进；
+- 热点新闻推荐顾名思义是取最近被最多用户浏览过的新闻进行推荐。
 
-use
-Preparations
-1. Database cooperation
-(The main purpose of this step is to illustrate the data that the recommender system requires to be interacted with. If you build a real database, you can directly run the test data in the newly created database to complete all the table creation work, and the provided test data is attached.)
+**推荐算法的具体细节可参考文件[推荐系统介绍.pdf]**
 
-Currently, the recommender system only supports interaction with MYSQL databases
+**主要使用的库（Lib）:**
 
-The system needs to interact with five tables: users, news, newsmodules, newslogs, and recommendations.
+- [Ansj](https://github.com/NLPchina/ansj_seg)：基于内容的推荐部分用以分词，以及其内含的TFIDF算法。
+- [Quartz](http://www.quartz-scheduler.org/)：推荐系统定时运行的设定。
+- [Mahout](http://mahout.apache.org/)：使用内置的协同过滤算法。
+- [Jfinal](http://www.jfinal.com/)：使用内置的ActiveRecord与Db工具，对推荐系统中的数据库表做了实体类映射，以简化数据库相关操作。
 
-Users table
-A table that stores basic user information. At least two fields are required: user ID (id: bigint), user preference keyword list (pref_list: json), and user last login time (latest_log_time: timestamp).
 
-The name of the field	type	Non-null	Primary key	foreign key	Self-incrementing	Default value
-id	bigint	yes	yes		yes	
-pref_list	text	yes				{"moduleid1":{},"moduleid2":{},...}
-latest_log_time	timestamp	yes				
-News table news
-A table that stores basic news information. At least three fields are required: news ID (id:bigint), news text content (content:text), and module (module_id).
+本推荐系统需要基于【新闻模块】使用，此处对于【新闻模块】的定义是：**有规律地进行新闻采集，并通过公共平台对用户进行新闻展示与推送的应用。**当然，这是实际应用的需求，如果只是自己做研究或者实验的话，可以只使用[测试数据](https://github.com/bluemapleman/NewsRecommendSystem/blob/master/test_data.sql)即可。
 
-The name of the field	type	Non-null	Primary key	foreign key	Self-incrementing	Default value
-id	bigint	yes	yes		yes	
-title	text	yes				
-content	text	yes				
-module_id	int	yes		yes		
-NewsModules
-A table that stores information about the news module. At least two fields are required: module id (id:int), module name (name:text), and crawl time/news date (news_time:timestamp).
 
-The name of the field	type	Non-null	Primary key	foreign key	Self-incrementing	Default value
-id	int	yes	yes		yes	
-name	text	yes				
-news_time	timestamp	yes				
-Browse the record table newslogs
-A table that stores news records for users to browse. At least three fields are required: Record ID (ID: Bigint), User ID (user_id: BigInt), News ID (news_id: Bigint), Browsing Time (view_time: TimeStamp), and User's Preference for News (prefer_degree[0: Browse Only, 1: Comment, 2: Favorite]).
+## 使用
 
-The name of the field	type	Non-null	Primary key	foreign key	Self-incrementing	Default value
-id	bigint	yes	yes		yes	
-user_id	bigint	yes		yes		
-news_id	bigint	yes		yes		
-view_time	timestamp	yes				
-prefer_degree	int	yes				
-Recommendations
-Stores a table of recommendation results and user feedback generated by the recommender system for users. At least five fields are required: recommendation result ID (ID: bigint), user ID (user_id: bigint), news ID (news_id: bigint), timestamp of recommendation result generation (derive_time: timestamp), user feedback (feedback: bit[0: user not viewed, 1: user viewed]), and the corresponding recommendation algorithm generated by the result (derive_ algorithm:int[0: Collaborative Filtering, 1: Content-Based Recommendations, 2: Hot News Recommendations])
+### 预备工作
 
-The name of the field	type	Non-null	Primary key	foreign key	Self-incrementing	Default value
-id	bigint	yes	yes		yes	
-user_id	bigint	yes		yes		
-news_id	bigint	yes		yes		
-derive_time	timestamp	yes				
-feedback	bit					0
-derive_algorithm	int	yes				
-2. Database connection configuration
-In the res directory at the root of the project, modify the database configuration in dbconfig.properties.
+#### 一、数据库配合
 
+(**该步骤主要是为了说明推荐系统要求交互的数据。真实建库的话，直接在新建的数据库中运行[测试数据](https://github.com/bluemapleman/NewsRecommendSystem/blob/master/test_data.sql)，即可完成所有建表工作，附带提供的测试数据。**)
+
+**本推荐系统目前只支持与MYSQL数据库进行交互**
+
+本系统需要与五个表进行交互：用户表（users）,新闻表（news），新闻模块表(newsmodules)，浏览记录表（newslogs），推荐结果表（Recommendations）。
+
+- 用户表users
+
+存储用户基本信息的表。要求至少拥有两个字段：用户id（id:bigint），用户喜好关键词列表（pref_list:json），用户最近登录时间（latest_log_time:timestamp）。
+
+|字段名|类型|非空|主键|外键|自增|默认值|
+|--|--|--|--|--|--|--|
+|id|bigint|yes|yes||yes||
+|pref_list|text|yes||||{"moduleid1":{},"moduleid2":{},...}|
+|latest_log_time|timestamp|yes|||||
+
+- 新闻表news
+
+存储新闻基本信息的表。要求至少拥有三个字段：新闻id（id：bigint），新闻文本内容（content:text），所属模块(module_id)。
+
+|字段名|类型|非空|主键|外键|自增|默认值|
+|--|--|--|--|--|--|--|
+|id|bigint|yes|yes||yes||
+|title|text|yes|||||
+|content|text|yes|||||
+|module_id|int|yes||yes|||
+
+
+- 新闻模块表newsmodules
+
+存储新闻模块信息的表。要求至少拥有两个字段：模块id（id:int），模块名称（name:text），抓取时间/新闻日期(news_time:timestamp)。
+
+|字段名|类型|非空|主键|外键|自增|默认值|
+|--|--|--|--|--|--|--|
+|id|int|yes|yes||yes||
+|name|text|yes|||||
+|news_time|timestamp|yes|||||
+
+
+- 浏览记录表newslogs
+
+存储用户浏览新闻记录的表。要求至少拥有三个字段：记录id（id:bigint），用户id（user_id：bigint），新闻id（news_id：bigint），浏览时间(view_time:timestamp)，用户对新闻的偏好程度(prefer_degree[0：仅仅浏览，1：评论，2：收藏])。
+
+|字段名|类型|非空|主键|外键|自增|默认值|
+|--|--|--|--|--|--|--|
+|id|bigint|yes|yes||yes||
+|user_id|bigint|yes||yes|||
+|news_id|bigint|yes||yes|||
+|view_time|timestamp|yes|||||
+|prefer_degree|int|yes|||||
+
+
+
+- 推荐结果表Recommendations
+
+存储推荐系统为用户生成的推荐结果及用户反馈的表。要求至少拥有五个字段：推荐结果id（id：bigint），用户id（user_id：bigint），新闻id（news_id：bigint），推荐结果生成时间戳（derive_time:timestamp）,用户反馈(feedback:bit[0:用户未浏览，1：用户进行了浏览])，结果生成的对应推荐算法(derive_algorithm:int[0:协同过滤，1:基于内容的推荐，2：热点新闻推荐])
+
+|字段名|类型|非空|主键|外键|自增|默认值|
+|--|--|--|--|--|--|--|
+|id|bigint|yes|yes||yes||
+|user_id|bigint|yes||yes|||
+|news_id|bigint|yes||yes|||
+|derive_time|timestamp|yes|||||
+|feedback|bit|||||0|
+|derive_algorithm|int|yes|||||
+
+
+
+#### 二、数据库连接配置
+
+在项目根目录下的res目录下，修改dbconfig.properties文件中有关数据库的配置：
+
+```
 url = jdbc:mysql://[数据库ip]/[数据库名]?useUnicode=true&characterEncoding=utf8
 user = [登录用户名]
 password = [登录密码]
-Note that the encoding setting of the database should be UTF8MB4. (MB4 supports emoji characters)
+```
 
-Quick Start
-After the database configuration is complete, follow the following four steps:
+**注意，数据库的编码设置应为utf8mb4。（mb4支持emoji字符）**
 
-1. Under the com.qianxinyao.TomNewsRecommender package, find the class Main;
+### 系统启动-Quick Start
 
-2. Choose a recommendation algorithm. Set the enableCB, enableCF, and enableHR variables of boolean to indicate whether the collaborative filtering recommendation algorithm, content-based recommendation algorithm, and hot news-based recommendation algorithm are enabled in the recommendation process, respectively. If all of them are set to true, it means that all three algorithms work together to generate recommendation results for users.
+完成数据库配置后，依次四个步骤：
 
-3. Select the person you want to recommend. There are three types of recommended users: all users, active users (who have logged in in recently) and custom users (users specified by themselves).
+1.在com.qianxinyao.TomNewsRecommender包下，找到类Main；
 
-4. Choose how you want the system to run. There are two types of operation modes: one-time operation and timed operation. Once the recommendation is generated, the system stops after the generation is completed, and the system needs to be restarted to generate recommendations again. Scheduled runs, on the other hand, can generate recommended results for users at regular intervals, and if the system is not forcibly stopped, the system will continue to run. (The scheduled running time is set in the paraConfig.properties file.)
+2.选择推荐算法。设置boolean类型的enableCB,enableCF,enableHR变量，分别代表推荐过程中是否启用协同过滤推荐算法、基于内容的推荐算法、基于热点新闻的推荐算法。若均设为true，表示三种算法均工作，一起为用户生成推荐结果；
 
-Here's the sample code:
+3.选择推荐对象。推荐对象分为三种：全体用户，活跃用户（最近一段时间有登录行为）与自定义用户（自己指定的用户），若选择自定义用户，需要构建包含目标用户id(long)的List<Long>；
 
+4.选择系统运行方式。运行方式分为两种：一次运行和定时运行。一次运行即只为用户进行一次推荐生成，生成结束后则系统停止，若要再生成推荐，需要重新启动系统。而定时运行则可以定时为用户生成推荐结果，若不强制停止系统，则系统会一直运行下去。（定时运行时间在paraConfig.properties文件中设定）
+
+以下是示例代码：
+
+```
 package com.qianxinyao.TomNewsRecommender;
 
 import java.util.ArrayList;
@@ -131,42 +165,57 @@ public class Main
 //      new JobSetter(enableCF,enableCB,enableHR).executeQuartzJob(forActiveUsers);
     }
 }
-Daily use
-All kinds of parameters running on the system can be configured in the paraConfig.properties file in the src/main/res directory in the root directory. The default configuration is recommended.
+```
 
-If the recommendation system needs to be able to generate effective recommendations each time, as long as the [News Module] keeps a certain amount of news captured at a certain frequency and stored in the news table. (It's best to do it at the same frequency as the recommender system's scheduled recommendations, and to complete a crawl before the recommender system runs, and it is recommended to crawl the news once a day and do a recommendation generation.) ）
+### 日常使用
 
-Note: The incoming news should be marked with module_id, for details, please refer to the code in the NewsScraper class in the database table and com.qianxinyao.TomNewsRecommender package.
+系统运行的各类参数都可以在根目录下src/main/res目录下的paraConfig.properties文件中进行配置。默认配置是推荐配置。
 
-Test data
-Run SQL statements in the data.sql in a MySQL database to generate database structure and test data.
+若需要推荐系统能在每次生成有效的推荐，只要【新闻模块】保持以一定频率抓取一定量的新闻并入库news表。（最好与推荐系统定时推荐的频率相同，并在推荐系统运行之前完成一次抓取，推荐每天抓取一次新闻，并进行一次推荐生成。）
 
-The test data consists of the following sections:
+**注意：入库的新闻要标注module_id，详情可参见数据库表与com.qianxinyao.TomNewsRecommender包下的NewsScraper类中的代码。**
 
-Users table: 7 test users
-news table: 306 test news scraped from NetEase's homepage on 2017-12-12
-NewsModules table: 17 test modules
-newslogs: 9 browsing records used to test the effectiveness of the recommendation algorithm
-To see how well the recommender system works on test data, simply execute it under the Main class:
 
+## 测试数据
+
+在Mysql数据库中运行data.sql中的sql语句，可生成数据库结构与测试数据。
+
+测试数据中包含以下几个部分：
+
+- users表：7个测试用户
+- news表：306个2017-12-12日从网易首页抓取的测试新闻
+- newsmodules表：17个测试模块
+- newslogs：测试推荐算法效果用的9条浏览记录
+
+要查看推荐系统在测试数据上运行的效果，只需在Main类下执行：
+
+```
 //在测试数据上运行
 new TestDataRunner().runTestData();
-The expected recommendation generation results are as follows:
+```
 
-If the test data is filtered collaboratively, 0 recommendations will be generated.
-If a content-based recommendation is made on the test data, user 1 (id=1) will recommend 4 news items (85, 87, 89, and 104) (news with duplicate titles, and the "contract" keyword in the news title matches the user's preferred keywords), 89 news (news with duplicate titles) for user 2, and 87, 85, and 100 news (the "contract" keyword in the news title matches the user's preferred keywords).
-If a recommendation is made based on hot news on the test data, user 1 will recommend 103,104, 100,104 for user 2, and 100,101 for user 3, respectively, because the most viewed news is the news (100, 101, 102, 103, 104) that the three users with browsing records have seen recently.
-Additional Notes
-1.com.qianxinyao.TomNewsRecommender's NewsScraper class is a class used to scrape NetEase's test news, and you can also use this class to continue collecting news. By default, this class captures all news on the homepage of NetEase News at one time.
+预期的推荐生成结果如下：
 
-2. The effect of collaborative filtering is currently not very stable/controllable, because it uses Mahout's built-in collaborative filtering tool. Generally speaking, the more active users of the news module, the better and more obvious the collaborative filtering effect. If there is a need, I will implement a collaborative filtering algorithm that can stably generate a specified number of recommendation results in the later stage.
+- 若对测试数据进行一次协同过滤，将生成0条推荐。
+- 若对测试数据进行一次基于内容的推荐，将为用户1（id=1）推荐85，87，89，104这四条新闻(有重复标题的新闻，新闻标题中的“合同”关键词匹配上了用户的喜好关键词)，为用户2推荐89新闻（重复标题的新闻），推荐用户3推荐87，85，100这三条新闻（新闻标题中的“合同”关键词匹配上了用户的喜好关键词）。
+- 若对测试数据进行一次基于热点新闻的推荐，将分别为用户1推荐103，104，为用户2推荐100，104，为用户3推荐100，101，因为最近被浏览得最多的新闻就是这三个拥有浏览记录的用户看过的那些新闻（100，101，102，103，104）。
 
-3. Generally, when the number of recommendations generated by collaborative filtering and content-based recommendation algorithms is insufficient, the number can be supplemented by recommendations based on hot news.
 
-Changelog
-Everyone is welcome to submit any ideas and suggestions for this recommender system!
+## 额外说明
 
-version	date	characteristic
-V1.0.0	2018/10/04	Organize README.md documentation to make it easier to understand.
-V1.0.1	Under development	1. Independently implement the Java version of the TFIDF algorithm, or organize a training corpus to achieve better keyword extraction results;
-2. Improve the matching degree calculation method of the content-based recommendation algorithm to make it more efficient. (If there are thousands of favorite keywords in the user's preference list, if 1,000 recent news items are matched with the user, it only takes 100ms for the background to calculate the list of recommended results, regardless of other time factors such as network transmission)
+1.com.qianxinyao.TomNewsRecommender下的NewsScraper类是抓取网易的测试新闻时用的类，大家也可以用这个类继续采集新闻。该类默认对网易新闻首页的所有新闻进行一次抓取入库。
+
+2.协同过滤的效果目前不太稳定/可控，因为采用的是Mahout内置的协同过滤工具。一般来说，新闻模块的活跃用户越多，则协同过滤效果越好，也越明显。若有需求，我会在后期自己实现能稳定生成指定数量的推荐结果的协同过滤算法。
+
+3.一般当协同过滤与基于内容的推荐算法生成的推荐数目不足时，可以用基于热点新闻的推荐进行数量补充。
+
+
+
+# 更新日志
+
+**欢迎大家踊跃提出自己对该推荐系统的任何想法和建议！**
+
+|版本|日期|特性|
+|--|--|--|
+|V1.0.0|2018/10/04|规整README.md说明文档，使之更加易懂理解。|
+|V1.0.1|开发中|1. 自主实现Java版本的TFIDF算法，或者整理一份训练语料库，以达到更好的关键词提取效果；<br>2.改善基于内容的推荐算法的匹配程度计算方法，使之更加高效。（若用户的偏好列表中有数千喜好关键词，若将一千条最近的新闻与该用户做匹配，后台计算出推荐结果列表只需要*100ms*，不考虑网络传输等其他时间因素）|
